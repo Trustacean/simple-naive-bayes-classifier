@@ -66,26 +66,50 @@ public class BayesianClassifier {
         }
     }
 
-    public String predict(String[] features) {
-        assert features != null;
-
-        double maxProbability = 0;
+    public String predict(String[] instance) {
+        assert instance != null && instance.length == headers.length - 1;
+    
+        double maxProbability = Double.NEGATIVE_INFINITY;
         String predictedClass = null;
-
-        for (String className : this.classNames) {
-            double probability = 1;
-            for (int i = 0; i < features.length; i++) {
-                String key = headers[i] + "|" + features[i] + "|" + className;
-                probability *= probabilities.getOrDefault(key, 1.0);
+    
+        System.out.println("Prediction Process for Instance: " + String.join(", ", instance));
+        System.out.println("--------------------------------------------------");
+    
+        for (String className : classNames) {
+            // Calculate prior probability: P(class)
+            double classPrior = (double) classFrequency.get(className) / trainDataset.size();
+            System.out.println("Class: " + className);
+            System.out.println("  Prior Probability P(" + className + "): " + classPrior);
+    
+            // Calculate likelihood: P(features | class)
+            double likelihood = 1.0;
+            System.out.println("  Likelihood Calculation:");
+            for (int i = 0; i < instance.length; i++) {
+                String key = headers[i] + "|" + instance[i] + "|" + className;
+                double featureProbability = probabilities.getOrDefault(key, 1.0 / (classFrequency.get(className) + classNames.size()));
+                System.out.println("    P(" + headers[i] + "=" + instance[i] + " | " + className + ") = " + featureProbability);
+                likelihood *= featureProbability;
             }
-            probability *= (double) classFrequency.get(className) / this.trainDataset.size();
-            if (probability > maxProbability) {
-                maxProbability = probability;
+            System.out.println("  Likelihood P(features | " + className + "): " + likelihood);
+    
+            // Calculate posterior probability: P(class | features) ∝ P(class) * P(features | class)
+            double posterior = classPrior * likelihood;
+            System.out.println("  Posterior Probability P(" + className + " | features): " + posterior);
+    
+            // Select the class with the highest posterior probability
+            if (posterior > maxProbability) {
+                maxProbability = posterior;
                 predictedClass = className;
             }
+    
+            System.out.println("--------------------------------------------------");
         }
-
-        System.out.println(maxProbability);
-        return predictedClass;  
+    
+        System.out.println("Final Comparison:");
+        System.out.println("  Predicted Class: " + predictedClass);
+        System.out.println("  Maximum Posterior Probability: " + maxProbability);
+        System.out.println("==================================================");
+    
+        return predictedClass;
     }
 }

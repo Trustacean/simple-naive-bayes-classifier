@@ -16,14 +16,7 @@ public class NaiveBayes {
     public static void main(String[] args) {
         String file = "src/dataset/comp.csv";
         List<String[]> data = CsvHandler.readCsv(file, ';', true);
-
-        for (String[] row : data) {
-            for (String cell : row) {
-                System.out.print(cell + " ");
-            }
-            System.out.println();
-        }
-
+        
         BayesianClassifier model = new BayesianClassifier(data);
         model.train();
 
